@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英语好句采集 · 打卡日历</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --paper:#F3EFE5;
+    --card:#FCFAF4;
+    --ink:#2B3A37;
+    --pine:#3E6B5E;
+    --pine-soft:#6B9080;
+    --line:#DDD5C2;
+    --muted:#8C8776;
+    --today-ring:#2B3A37;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    background:
+      radial-gradient(120% 60% at 50% -10%, #FAF7EF 0%, transparent 60%),
+      var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    display:flex; justify-content:center;
+    padding:28px 16px 48px;
+  }
+  .app{
+    width:100%; max-width:480px;
+  }
+  /* ===== 标题 ===== */
+  header{margin-bottom:20px;}
+  .kicker{
+    font-size:12px; letter-spacing:.14em; color:var(--muted);
+    font-weight:600; margin-bottom:6px;
+  }
+  h1{
+    font-family:"Noto Serif SC","Songti SC",serif;
+    font-size:26px; font-weight:900; line-height:1.25;
+    letter-spacing:.02em;
+  }
+  .sub{
+    margin-top:6px; font-size:13px; color:var(--muted);
+  }
+  /* ===== 日历卡片 ===== */
+  .calendar-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:18px 14px 14px;
+    box-shadow:0 10px 24px rgba(43,58,55,.07);
+  }
+  .cal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 4px 12px;
+  }
+  .month-label{
+    font-family:"Noto Serif SC","Songti SC",serif;
+    font-size:18px; font-weight:700; letter-spacing:.04em;
+  }
+  .nav-btn{
+    width:38px; height:38px; border-radius:50%;
+    border:1.5px solid var(--line);
+    background:transparent; color:var(--ink);
+    display:grid; place-items:center; cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .nav-btn:hover{ background:var(--paper); border-color:var(--pine-soft);}
+  .nav-btn:active{ transform:scale(.94);}
+  .nav-btn svg{ width:18px; height:18px; display:block;}
+  .weekdays{
+    display:grid; grid-template-columns:repeat(7,1fr);
+    padding:8px 2px 6px;
+  }
+  .weekdays span{
+    text-align:center; font-size:12px; font-weight:600;
+    color:var(--muted); letter-spacing:.02em;
+  }
+  .grid{
+    display:grid; grid-template-columns:repeat(7,1fr);
+    gap:4px; padding:0 2px;
+  }
+  .day{
+    position:relative;
+    display:grid; place-items:center;
+    min-height:44px; aspect-ratio:1/1;
+    border-radius:12px;
+    font-size:16px; color:var(--ink);
+    cursor:pointer; user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .day:hover{ background:rgba(62,107,94,.08);}
+  .day:active{ transform:scale(.92);}
+  .day.empty{ visibility:hidden; pointer-events:none;}
+  /* 打卡 = 墨绿图章 */
+  .day.marked{
+    background:var(--pine);
+    color:#FDFBF5; font-weight:600;
+    box-shadow:0 2px 0 rgba(0,0,0,.18), inset 0 -3px 0 rgba(0,0,0,.12);
+  }
+  .day.marked::after{
+    content:""; position:absolute; top:6px; right:8px;
+    width:5px; height:5px; border-radius:50%;
+    background:rgba(255,255,255,.5);
+  }
+  .day.today:not(.marked){
+    outline:1.6px solid var(--today-ring); outline-offset:-1.6px;
+  }
+  .day.today.marked{
+    outline:1.6px solid #FDFBF5; outline-offset:-1.6px;
+  }
+  .legend{
+    margin-top:12px; padding:10px 4px 2px;
+    border-top:1px dashed var(--line);
+    display:flex; gap:16px; align-items:center;
+    font-size:12px; color:var(--muted);
+  }
+  .legend i{
+    display:inline-block; width:12px; height:12px; border-radius:4px;
+    margin-right:5px; vertical-align:-1px;
+  }
+  .legend .dot-mark{ background:var(--pine);}
+  .legend .dot-today{ outline:1.6px solid var(--today-ring); background:transparent;}
+  /* ===== 统计区（笔记本横线纸） ===== */
+  .stats{
+    margin-top:16px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:18px 18px 16px;
+    background-image:repeating-linear-gradient(
+      transparent, transparent 27px, var(--line) 27px, var(--line) 28px
+    );
+  }
+  .stats-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .stats-title{
+    font-family:"Noto Serif SC","Songti SC",serif;
+    font-size:15px; font-weight:700;
+  }
+  .stats-count{
+    font-size:13px; color:var(--muted);
+  }
+  .stats-count b{ color:var(--pine); font-size:17px; font-weight:700; margin:0 2px;}
+  .today-row{
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .today-status{
+    font-size:13px; color:var(--muted);
+  }
+  .today-status b{ color:var(--ink); font-weight:600;}
+  .today-btn{
+    border:none; background:transparent;
+    color:var(--pine); font-size:13px; font-weight:600;
+    cursor:pointer; padding:8px 4px 8px 12px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .today-btn:active{ opacity:.6;}
+  footer{
+    margin-top:18px; text-align:center;
+    font-size:11px; color:var(--muted); line-height:1.7;
+  }
+  @media (max-width:360px){
+    .day{ font-size:15px;}
+    .calendar-card{ padding:14px 10px 10px;}
+  }
+</style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="kicker">ENGLISH COLLECTION</div>
+      <h1>英语好句采集本</h1>
+      <p class="sub">点一下日期 = 标记当天写了英语好句；再点一次取消。</p>
+    </header>
+
+    <section class="calendar-card" aria-label="打卡日历">
+      <div class="cal-head">
+        <button class="nav-btn" id="prevBtn" aria-label="上个月">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <h2 class="month-label" id="monthLabel">2026年10月</h2>
+        <button class="nav-btn" id="nextBtn" aria-label="下个月">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+      <div class="weekdays">
+        <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="legend">
+        <span><i class="dot-mark"></i>已写英语好句</span>
+        <span><i class="dot-today"></i>今天</span>
+      </div>
+    </section>
+
+    <section class="stats" aria-label="打卡统计">
+      <div class="stats-head">
+        <span class="stats-title">本月进度</span>
+        <span class="stats-count">已写 <b id="monthCount">0</b> 天</span>
+      </div>
+      <div class="today-row">
+        <span class="today-status" id="todayStatus">今天还没打卡</span>
+        <button class="today-btn" id="todayBtn">回到今天</button>
+      </div>
+    </section>
+
+    <footer>记录保存在本机浏览器里，换浏览器或清理缓存会丢失。</footer>
+  </main>
+
+<script>
+(function(){
+  "use strict";
+  var STORAGE_KEY = "en-sentence-checkin-v1";
+
+  /* ---------- 状态 ---------- */
+  var marked = load();
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+  function save(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(marked)); }catch(e){}
+  }
+
+  /* ---------- 视图状态：当前显示的年月 ---------- */
+  var now = new Date();
+  var viewYear = now.getFullYear();
+  var viewMonth = now.getMonth(); // 0-11
+
+  var gridEl = document.getElementById("grid");
+  var monthLabelEl = document.getElementById("monthLabel");
+  var monthCountEl = document.getElementById("monthCount");
+  var todayStatusEl = document.getElementById("todayStatus");
+
+  function pad(n){ return n < 10 ? "0" + n : "" + n; }
+  function dateKey(y, m, d){ return y + "-" + pad(m + 1) + "-" + pad(d); }
+  function isToday(y, m, d){
+    return y === now.getFullYear() && m === now.getMonth() && d === now.getDate();
+  }
+
+  /* ---------- 渲染 ---------- */
+  function render(){
+    // 当月第一天是周几（周一为每周第一天）
+    var firstWeekday = new Date(viewYear, viewMonth, 1).getDay(); // 0=周日
+    var leading = (firstWeekday + 6) % 7;
+    var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+    monthLabelEl.textContent = viewYear + "年" + (viewMonth + 1) + "月";
+
+    var cells = [];
+    for(var i = 0; i < leading; i++){
+      cells.push('<div class="day empty"></div>');
+    }
+    for(var d = 1; d <= daysInMonth; d++){
+      var key = dateKey(viewYear, viewMonth, d);
+      var cls = "day";
+      if(marked[key]) cls += " marked";
+      if(isToday(viewYear, viewMonth, d)) cls += " today";
+      cells.push('<div class="' + cls + '" data-date="' + key + '" data-day="' + d + '">' + d + '</div>');
+    }
+    // 补足最后一行，保持 6 行高度稳定
+    var total = leading + daysInMonth;
+    var remain = (7 - total % 7) % 7;
+    for(var j = 0; j < remain; j++){
+      cells.push('<div class="day empty"></div>');
+    }
+    gridEl.innerHTML = cells.join("");
+
+    // 统计
+    var count = 0;
+    for(var k in marked){
+      if(marked[k] && k.indexOf(viewYear + "-" + pad(viewMonth + 1) + "-") === 0) count++;
+    }
+    monthCountEl.textContent = count;
+
+    // 今天状态
+    var todayKey = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
+    if(marked[todayKey]){
+      todayStatusEl.innerHTML = "今天已写 <b>英语好句</b>，干得漂亮";
+    }else{
+      todayStatusEl.innerHTML = "今天还没打卡，写完点一下日期";
+    }
+  }
+
+  /* ---------- 交互 ---------- */
+  gridEl.addEventListener("click", function(ev){
+    var cell = ev.target.closest(".day:not(.empty)");
+    if(!cell) return;
+    var key = cell.getAttribute("data-date");
+    if(marked[key]){
+      delete marked[key];
+    }else{
+      marked[key] = true;
+    }
+    save();
+    render();
+  });
+
+  document.getElementById("prevBtn").addEventListener("click", function(){
+    viewMonth--;
+    if(viewMonth < 0){ viewMonth = 11; viewYear--; }
+    render();
+  });
+  document.getElementById("nextBtn").addEventListener("click", function(){
+    viewMonth++;
+    if(viewMonth > 11){ viewMonth = 0; viewYear++; }
+    render();
+  });
+  document.getElementById("todayBtn").addEventListener("click", function(){
+    now = new Date();
+    viewYear = now.getFullYear();
+    viewMonth = now.getMonth();
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
